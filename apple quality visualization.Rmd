@@ -1,0 +1,109 @@
+---
+title: "Apple Quality Data Visualization"
+author: "Kevin Pham"
+date: "2024-03-11"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+apple_data <- read.csv("apple_quality.csv")
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(ggthemes)
+library(gplots)
+```
+
+## R Markdown
+The intended purpose of this document will be to demonstrate my familiarity with R's most widely used data visualization library ggplot2. Practice makes perfect. 
+
+The following data set was retrieved from https://www.kaggle.com/datasets/nelgiriyewithana/apple-quality/data
+
+Laughter is the best medicine, and an apple a day keeps the doctor away!
+
+```{r quick summary}
+summary(apple_data)
+```
+\newpage
+## Cleaning the data
+
+
+```{r cleaning}
+na_count <- colSums(is.na(apple_data))
+new_apple_data<- na.omit(apple_data)
+good_apples <- new_apple_data %>% filter(Quality == "good") # Good apples
+bad_apples <- new_apple_data %>% filter(Quality != "good") # Bad apples!
+new_apple_data$Acidity <- as.numeric(new_apple_data$Acidity)
+```
+
+## Plots
+
+This scatter plot shows the relationship between the scores assigned to the size and weight of apples in the dataset. Each point on the plot represents an individual apple, The x-axis indicates the Size Score and the y-axis represents the Weight Score. The color of each point is determined by the combined score of size and weight, creating a gradient from red to green.
+
+```{r plotting}
+ggplot(new_apple_data, aes(x = Size, y = Weight, color = Size + Weight)) +
+  geom_point() +
+  labs(title = "Scatter Plot of Apple Size vs. Weight Scores",
+       x = "Size Score", y = "Weight Score") +
+  scale_color_gradient(low = "red", high = "green") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+This is a plot for ALL apples.
+I would like to see if a "Good" apple is characterized by having higher weight and size scores.
+
+## Good apples
+```{r, good apples}
+ggplot(good_apples, aes(x = Size, y = Weight, color = Size + Weight)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Scatter Plot of GOOD Apples Size vs. Weight Scores",
+       x = "Size Score", y = "Weight Score") +
+  scale_color_gradient(low = "red", high = "green") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+## Bad apples
+```{r bad apples}
+ggplot(bad_apples, aes(x = Size, y = Weight, color = Size + Weight)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Scatter Plot of BAD Apples Size vs. Weight Scores",
+       x = "Size Score", y = "Weight Score") +
+  scale_color_gradient(low = "red", high = "green") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+## Conclusion 1
+
+
+* The negative correlation coefficient (-0.1707017) indicates a weak negative linear relationship between the "Weight" and "Size" variables.
+* The test statistic (t = -10.954) is far from zero.
+* The p-value is extremely small, suggesting strong evidence against the null hypothesis of no correlation.
+* The 95 percent confidence interval does not include zero, further supporting the rejection of the null hypothesis.
+* There is statistically significant evidence of a weak negative linear correlation between the "Weight" and "Size" variables in the dataset.
+
+```{r correlation}
+cor_test_result <- cor.test(new_apple_data$Weight, new_apple_data$Size, method = "pearson")
+```
+
+## More Correlations
+
+Juiciness and Acidity are positively correlated. 
+```{r}
+cor_matrix <- cor(new_apple_data[, c("Weight", "Sweetness", "Crunchiness", "Juiciness", "Ripeness", "Acidity")])
+
+# Create a heatmap of the correlation matrix with annotations and color map
+heatmap.2(
+  cor_matrix, 
+  trace = "none", 
+  col = colorRampPalette(c("blue", "white", "red"))(100), 
+  margins = c(5, 10), 
+  dendrogram = "none", 
+  notecol = "black", 
+  density.info = "none", 
+  main = "Correlation Heatmap", 
+  cexRow = 1,  
+  cexCol = 1   
+)
+```
+
